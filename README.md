@@ -153,6 +153,10 @@ Typical improvements on common kernel patterns:
 
 *Results vary by GPU architecture and kernel complexity*
 
+## CI
+
+This project runs continuous integration via GitHub Actions ([ci.yml](.github/workflows/ci.yml)) on every pull request to `main` and every push to `main`. The workflow checks code formatting (black, isort), type checking (mypy), runs tests (pytest), and verifies the package builds cleanly.
+
 ## Contributing
 
 We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
