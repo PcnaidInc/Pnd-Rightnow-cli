@@ -10,7 +10,7 @@ import pickle
 import hashlib
 from datetime import datetime
 
-from ultrathink_cli.cache import CacheManager
+from rightnow_cli.cache import CacheManager
 
 
 @pytest.fixture
@@ -40,7 +40,7 @@ def sample_kernel():
 @pytest.fixture
 def mock_sqlite_connect():
     """Mock sqlite3.connect."""
-    with patch('ultrathink_cli.cache.sqlite3.connect') as mock_connect:
+    with patch('rightnow_cli.cache.sqlite3.connect') as mock_connect:
         mock_conn = MagicMock()
         mock_cursor = MagicMock()
         mock_conn.cursor.return_value = mock_cursor
@@ -58,7 +58,7 @@ class TestCacheManagerInitialization:
         with patch('pathlib.Path.home') as mock_home:
             mock_home.return_value = Path("/home/user")
             with patch('pathlib.Path.mkdir'):
-                with patch('ultrathink_cli.cache.sqlite3.connect'):
+                with patch('rightnow_cli.cache.sqlite3.connect'):
                     cm = CacheManager()
                     assert cm.base_dir == Path("/home/user/.ultrathink-cli")
 

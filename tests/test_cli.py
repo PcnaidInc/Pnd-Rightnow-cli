@@ -6,7 +6,7 @@ from typer.testing import CliRunner
 import sys
 import json
 
-from ultrathink_cli.cli import app, main
+from rightnow_cli.cli_enhanced import app, main
 
 
 @pytest.fixture
@@ -18,7 +18,7 @@ def runner():
 @pytest.fixture
 def mock_cache_manager():
     """Create a mock CacheManager."""
-    with patch('ultrathink_cli.cli.CacheManager') as mock_cache:
+    with patch('rightnow_cli.cli_enhanced.CacheManager') as mock_cache:
         cache_instance = MagicMock()
         mock_cache.return_value = cache_instance
         yield cache_instance
@@ -27,7 +27,7 @@ def mock_cache_manager():
 @pytest.fixture
 def mock_openrouter_client():
     """Create a mock OpenRouterClient."""
-    with patch('ultrathink_cli.cli.OpenRouterClient') as mock_client:
+    with patch('rightnow_cli.cli_enhanced.OpenRouterClient') as mock_client:
         client_instance = MagicMock()
         mock_client.return_value = client_instance
         yield client_instance
@@ -36,7 +36,7 @@ def mock_openrouter_client():
 @pytest.fixture
 def mock_model_loader():
     """Create a mock ModelLoader."""
-    with patch('ultrathink_cli.cli.ModelLoader') as mock_loader:
+    with patch('rightnow_cli.cli_enhanced.ModelLoader') as mock_loader:
         loader_instance = MagicMock()
         mock_loader.return_value = loader_instance
         loader_instance.load_model.return_value = {
@@ -54,7 +54,7 @@ def mock_model_loader():
 @pytest.fixture
 def mock_cuda_compiler():
     """Create a mock CUDACompiler."""
-    with patch('ultrathink_cli.cli.CUDACompiler') as mock_compiler:
+    with patch('rightnow_cli.cli_enhanced.CUDACompiler') as mock_compiler:
         compiler_instance = MagicMock()
         mock_compiler.return_value = compiler_instance
         compiler_instance.compile_kernel.return_value = {
@@ -68,7 +68,7 @@ def mock_cuda_compiler():
 @pytest.fixture
 def mock_correctness_checker():
     """Create a mock CorrectnessChecker."""
-    with patch('ultrathink_cli.cli.CorrectnessChecker') as mock_checker:
+    with patch('rightnow_cli.cli_enhanced.CorrectnessChecker') as mock_checker:
         checker_instance = MagicMock()
         mock_checker.return_value = checker_instance
         checker_instance.check_kernel.return_value = True
@@ -78,7 +78,7 @@ def mock_correctness_checker():
 @pytest.fixture
 def mock_benchmarker():
     """Create a mock Benchmarker."""
-    with patch('ultrathink_cli.cli.Benchmarker') as mock_bench:
+    with patch('rightnow_cli.cli_enhanced.Benchmarker') as mock_bench:
         bench_instance = MagicMock()
         mock_bench.return_value = bench_instance
         bench_instance.benchmark_kernel.return_value = {
@@ -93,7 +93,7 @@ def mock_benchmarker():
 @pytest.fixture
 def mock_cuda_profiler():
     """Create a mock CUDAProfiler."""
-    with patch('ultrathink_cli.cli.CUDAProfiler') as mock_profiler:
+    with patch('rightnow_cli.cli_enhanced.CUDAProfiler') as mock_profiler:
         profiler_instance = MagicMock()
         mock_profiler.return_value = profiler_instance
         profiler_instance.profile_kernel.return_value = {
@@ -441,21 +441,21 @@ class TestVersionCommand:
 
     def test_version_success(self, runner):
         """Test version command success."""
-        with patch('ultrathink_cli.cli.version') as mock_version:
+        with patch('rightnow_cli.cli_enhanced.version') as mock_version:
             mock_version.return_value = "1.0.0"
             result = runner.invoke(app, ["version"])
             
             assert result.exit_code == 0
-            assert "ultrathink-cli version" in result.stdout
+            assert "RightNow CLI" in result.stdout
 
     def test_version_development(self, runner):
         """Test version command in development mode."""
-        with patch('ultrathink_cli.cli.version') as mock_version:
+        with patch('rightnow_cli.cli_enhanced.version') as mock_version:
             mock_version.side_effect = Exception("Not installed")
             result = runner.invoke(app, ["version"])
             
             assert result.exit_code == 0
-            assert "ultrathink-cli version 0.1.0 (development)" in result.stdout
+            assert "RightNow CLI" in result.stdout
 
 
 class TestMainFunction:
@@ -463,7 +463,7 @@ class TestMainFunction:
 
     def test_main_function(self):
         """Test main function calls app."""
-        with patch('ultrathink_cli.cli.app') as mock_app:
+        with patch('rightnow_cli.cli_enhanced.app') as mock_app:
             main()
             mock_app.assert_called_once()
 

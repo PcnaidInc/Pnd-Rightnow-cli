@@ -1,13 +1,18 @@
 import torch
 import numpy as np
-import pycuda.driver as cuda
-import pycuda.autoinit
-from pycuda.compiler import SourceModule
 import time
 from typing import Dict, Any, List, Tuple, Optional
 from rich.console import Console
 from rich.progress import Progress, BarColumn, TimeRemainingColumn
 import statistics
+
+try:
+    import pycuda.driver as cuda
+    import pycuda.autoinit
+    from pycuda.compiler import SourceModule
+    _PYCUDA_AVAILABLE = True
+except ImportError:
+    _PYCUDA_AVAILABLE = False
 
 console = Console()
 
@@ -17,10 +22,13 @@ class Benchmarker:
         self.iterations = iterations
         self.warmup_iterations = warmup_iterations
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
+
         if not torch.cuda.is_available():
             raise RuntimeError("CUDA is not available. Cannot perform benchmarking.")
-        
+
+        if not _PYCUDA_AVAILABLE:
+            raise RuntimeError("pycuda is not available. Install with: pip install rightnow-cli[gpu]")
+
         cuda.init()
         self.cuda_context = cuda.Device(0).make_context()
     

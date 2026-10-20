@@ -1,11 +1,16 @@
 import torch
 import numpy as np
-import pycuda.driver as cuda
-import pycuda.autoinit
-from pycuda.compiler import SourceModule
 from typing import Dict, Any, Tuple, List, Optional
 from rich.console import Console
 import time
+
+try:
+    import pycuda.driver as cuda
+    import pycuda.autoinit
+    from pycuda.compiler import SourceModule
+    _PYCUDA_AVAILABLE = True
+except ImportError:
+    _PYCUDA_AVAILABLE = False
 
 console = Console()
 
@@ -14,10 +19,13 @@ class CorrectnessChecker:
     def __init__(self, tolerance: float = 1e-5):
         self.tolerance = tolerance
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
+
         if not torch.cuda.is_available():
             raise RuntimeError("CUDA is not available. Cannot perform correctness checks.")
-        
+
+        if not _PYCUDA_AVAILABLE:
+            raise RuntimeError("pycuda is not available. Install with: pip install rightnow-cli[gpu]")
+
         cuda.init()
         self.cuda_context = cuda.Device(0).make_context()
     

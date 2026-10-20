@@ -5,27 +5,27 @@ import numpy as np
 import time
 import statistics
 
-from ultrathink_cli.bench import Benchmarker
+from rightnow_cli.bench import Benchmarker
 
 
 @pytest.fixture
 def mock_cuda_available():
     """Mock CUDA availability."""
-    with patch('ultrathink_cli.bench.torch.cuda.is_available', return_value=True):
+    with patch('rightnow_cli.bench.torch.cuda.is_available', return_value=True):
         yield
 
 
 @pytest.fixture
 def mock_cuda_not_available():
     """Mock CUDA not available."""
-    with patch('ultrathink_cli.bench.torch.cuda.is_available', return_value=False):
+    with patch('rightnow_cli.bench.torch.cuda.is_available', return_value=False):
         yield
 
 
 @pytest.fixture
 def mock_torch():
     """Mock torch module."""
-    with patch('ultrathink_cli.bench.torch') as mock_torch:
+    with patch('rightnow_cli.bench.torch') as mock_torch:
         # Setup torch mock
         mock_torch.cuda.is_available.return_value = True
         mock_torch.device.return_value = "cuda"
@@ -52,7 +52,7 @@ def mock_torch():
 @pytest.fixture
 def mock_cuda():
     """Mock pycuda module."""
-    with patch('ultrathink_cli.bench.cuda') as mock_cuda:
+    with patch('rightnow_cli.bench.cuda') as mock_cuda:
         # Mock CUDA device and context
         mock_device = MagicMock()
         mock_context = MagicMock()
@@ -76,7 +76,7 @@ def mock_cuda():
 @pytest.fixture
 def mock_source_module():
     """Mock SourceModule for CUDA compilation."""
-    with patch('ultrathink_cli.bench.SourceModule') as mock_sm:
+    with patch('rightnow_cli.bench.SourceModule') as mock_sm:
         mock_module = MagicMock()
         mock_kernel_func = MagicMock()
         mock_module.get_function.return_value = mock_kernel_func
@@ -148,7 +148,7 @@ class TestBenchmarkKernel:
 
     def test_benchmark_kernel_matmul(self, benchmarker, compiled_kernel, model_info, mock_source_module):
         """Test benchmarking a matmul kernel."""
-        with patch('ultrathink_cli.bench.console'):
+        with patch('rightnow_cli.bench.console'):
             result = benchmarker.benchmark_kernel(compiled_kernel, model_info)
         
         assert "avg_time_ms" in result
@@ -161,7 +161,7 @@ class TestBenchmarkKernel:
         """Test benchmarking an unknown operation."""
         unknown_kernel = {"operation": "unknown_op"}
         
-        with patch('ultrathink_cli.bench.console'):
+        with patch('rightnow_cli.bench.console'):
             result = benchmarker.benchmark_kernel(unknown_kernel, model_info)
         
         assert result["avg_time_ms"] == float('inf')
@@ -170,7 +170,7 @@ class TestBenchmarkKernel:
     def test_benchmark_kernel_error_handling(self, benchmarker, compiled_kernel, model_info):
         """Test error handling during benchmarking."""
         with patch.object(benchmarker, '_benchmark_matmul', side_effect=Exception("Test error")):
-            with patch('ultrathink_cli.bench.console'):
+            with patch('rightnow_cli.bench.console'):
                 result = benchmarker.benchmark_kernel(compiled_kernel, model_info)
         
         assert result["avg_time_ms"] == float('inf')
@@ -266,11 +266,11 @@ class TestPyTorchBenchmarking:
             op_count += 1
             return mock_torch.zeros(100, 100)
         
-        with patch('ultrathink_cli.bench.time.perf_counter') as mock_time:
+        with patch('rightnow_cli.bench.time.perf_counter') as mock_time:
             # Mock time to simulate execution
             mock_time.side_effect = [0.0, 0.01, 0.01, 0.02, 0.02, 0.03]  # warmup + iterations
             
-            with patch('ultrathink_cli.bench.console'):
+            with patch('rightnow_cli.bench.console'):
                 times = benchmarker._benchmark_pytorch_op(
                     mock_op,
                     warmup=2,
@@ -292,7 +292,7 @@ class TestCUDAKernelBenchmarking:
         inputs = [mock_torch.randn(100, 100)]
         output_shape = (100, 100)
         
-        with patch('ultrathink_cli.bench.console'):
+        with patch('rightnow_cli.bench.console'):
             times = benchmarker._benchmark_cuda_kernel(
                 compiled_kernel,
                 inputs,
@@ -327,7 +327,7 @@ class TestCUDAKernelBenchmarking:
         mock_sm, _, _ = mock_source_module
         mock_sm.side_effect = Exception("Compilation failed")
         
-        with patch('ultrathink_cli.bench.console'):
+        with patch('rightnow_cli.bench.console'):
             times = benchmarker._benchmark_cuda_kernel(
                 compiled_kernel,
                 [],
@@ -349,7 +349,7 @@ class TestCUDAKernelBenchmarking:
         mock_module.get_function.return_value = mock_kernel_func
         
         with patch.object(mock_cuda, 'module_from_buffer', return_value=mock_module):
-            with patch('ultrathink_cli.bench.console'):
+            with patch('rightnow_cli.bench.console'):
                 times = benchmarker._benchmark_cuda_kernel(
                     kernel_with_ptx,
                     [],
@@ -430,7 +430,7 @@ class TestEdgeCases:
         
         inputs = [tensor_input, 3.14]  # Mixed tensor and scalar
         
-        with patch('ultrathink_cli.bench.console'):
+        with patch('rightnow_cli.bench.console'):
             times = benchmarker._benchmark_cuda_kernel(
                 compiled_kernel,
                 inputs,

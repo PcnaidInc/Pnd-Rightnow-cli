@@ -5,7 +5,7 @@ import requests
 import json
 import time
 
-from ultrathink_cli.openrouter import OpenRouterClient, KernelCandidate
+from rightnow_cli.openrouter import OpenRouterClient, KernelCandidate
 
 
 @pytest.fixture
@@ -23,7 +23,7 @@ def openrouter_client(api_key):
 @pytest.fixture
 def mock_requests_post():
     """Mock requests.post for API calls."""
-    with patch('ultrathink_cli.openrouter.requests.post') as mock_post:
+    with patch('rightnow_cli.openrouter.requests.post') as mock_post:
         yield mock_post
 
 
@@ -161,7 +161,7 @@ class TestOpenRouterClient:
         mock_response.json.return_value = successful_api_response
         mock_requests_post.return_value = mock_response
         
-        with patch('ultrathink_cli.openrouter.console'):  # Mock console output
+        with patch('rightnow_cli.openrouter.console'):  # Mock console output
             candidates = openrouter_client.generate_kernels(
                 operation="matmul",
                 model_info=model_info,
@@ -191,7 +191,7 @@ class TestOpenRouterClient:
         mock_response.json.return_value = bad_response
         mock_requests_post.return_value = mock_response
         
-        with patch('ultrathink_cli.openrouter.console'):  # Mock console output
+        with patch('rightnow_cli.openrouter.console'):  # Mock console output
             candidates = openrouter_client.generate_kernels(
                 operation="matmul",
                 model_info=model_info,
@@ -205,7 +205,7 @@ class TestOpenRouterClient:
         """Test handling of API errors during kernel generation."""
         mock_requests_post.side_effect = Exception("API Error")
         
-        with patch('ultrathink_cli.openrouter.console'):  # Mock console output
+        with patch('rightnow_cli.openrouter.console'):  # Mock console output
             candidates = openrouter_client.generate_kernels(
                 operation="matmul",
                 model_info=model_info,
@@ -390,7 +390,7 @@ class TestEdgeCases:
 
     def test_generate_kernels_zero_candidates(self, openrouter_client, model_info, constraints):
         """Test generating zero kernel candidates."""
-        with patch('ultrathink_cli.openrouter.console'):
+        with patch('rightnow_cli.openrouter.console'):
             candidates = openrouter_client.generate_kernels(
                 operation="test",
                 model_info=model_info,
