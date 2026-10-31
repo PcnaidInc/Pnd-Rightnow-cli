@@ -156,14 +156,14 @@ def optimize(
         # Check API key with better UX
         if not cache_manager.has_api_key():
             console.print(Panel(
-                "[yellow][KEY] OpenRouter API key not found[/yellow]\n\n"
-                "To get your API key:\n"
-                "1. Visit [link]https://openrouter.ai[/link]\n"
-                "2. Sign up or log in\n"
-                "3. Create an API key in your dashboard",
-                title="[bold]API Key Required[/bold]",
-                border_style="yellow"
-            ))
+                    "[yellow][KEY] OpenRouter API key not found[/yellow]\n\n"
+                    "To get your API key:\n"
+                    "1. Visit [link]https://openrouter.ai[/link]\n"
+                    "2. Sign up or log in\n"
+                    "3. Create an API key in your dashboard",
+                    title="[bold]API Key Required[/bold]",
+                    border_style="yellow"
+                ))
             
             api_key = typer.prompt("\n[KEY] Please enter your OpenRouter API key", hide_input=True)
             cache_manager.save_api_key(api_key)
@@ -261,20 +261,22 @@ def optimize(
                     valid_kernels.append(compiled)
                     console.print(f"  [{SUCCESS_COLOR}][OK] Variant {i+1} compiled successfully[/{SUCCESS_COLOR}]")
                 except Exception as e:
-                    console.print(f"  [{ERROR_COLOR}][FAIL] Variant {i+1} failed: {str(e)[:50]}...[/{ERROR_COLOR}]")
+                    console.print(
+                        f"  [{ERROR_COLOR}][FAIL] Variant {i+1} failed: {str(e)[:50]}...[/{ERROR_COLOR}]"
+                    )
                 
                 progress.update(task, advance=1)
         
         if not valid_kernels:
             console.print(Panel(
-                f"[{ERROR_COLOR}][ERROR] No valid optimization variants generated[/{ERROR_COLOR}]\n\n"
-                "Try:\n"
-                "• Generating more variants with --variants\n"
-                "• Adjusting constraints (--max-registers, --shared-memory)\n"
-                "• Simplifying your kernel code",
-                title="[bold]Optimization Failed[/bold]",
-                border_style=ERROR_COLOR
-            ))
+                    f"[{ERROR_COLOR}][ERROR] No valid optimization variants generated[/{ERROR_COLOR}]\n\n"
+                    "Try:\n"
+                    "• Generating more variants with --variants\n"
+                    "• Adjusting constraints (--max-registers, --shared-memory)\n"
+                    "• Simplifying your kernel code",
+                    title="[bold]Optimization Failed[/bold]",
+                    border_style=ERROR_COLOR,
+                ))
             sys.exit(1)
         
         # Benchmark variants
@@ -368,10 +370,10 @@ def optimize(
         sys.exit(0)
     except Exception as e:
         console.print(Panel(
-            f"[{ERROR_COLOR}][ERROR] Error: {e}[/{ERROR_COLOR}]",
-            title="[bold]Error[/bold]",
-            border_style=ERROR_COLOR
-        ))
+                f"[{ERROR_COLOR}][ERROR] Error: {e}[/{ERROR_COLOR}]",
+                title="[bold]Error[/bold]",
+                border_style=ERROR_COLOR,
+            ))
         sys.exit(1)
 
 

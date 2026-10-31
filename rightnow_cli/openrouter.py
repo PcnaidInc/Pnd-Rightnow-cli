@@ -221,7 +221,7 @@ Consider:
             return matches[0].strip()
         
         if "__global__" in response and "void" in response:
-            lines = response.split('\n')
+            lines = response.split("\n")
             code_lines = []
             in_code = False
             
@@ -232,7 +232,7 @@ Consider:
                     code_lines.append(line)
             
             if code_lines:
-                return '\n'.join(code_lines).strip()
+                return "\n".join(code_lines).strip()
         
         return None
     

@@ -159,7 +159,9 @@ class CUDACompiler:
                 
             except subprocess.CalledProcessError as e:
                 error_info = self._parse_compilation_errors(e.stderr)
-                raise RuntimeError(f"Kernel compilation failed:\nCommand build:{nvcc_args}\n{error_info}")
+                raise RuntimeError(
+                    f"Kernel compilation failed:\nCommand build:{nvcc_args}\n{error_info}"
+                )
     
     def _prepare_kernel_code(self, kernel_code: str) -> str:
         """Prepare kernel code with necessary includes and helpers."""
@@ -233,7 +235,7 @@ __device__ inline float warp_reduce_max(float val) {
     
     def _parse_compilation_errors(self, error_output: str) -> str:
         """Parse and format compilation errors."""
-        lines = error_output.strip().split('\n')
+        lines = error_output.strip().split("\n")
         
         error_lines = []
         for line in lines:
@@ -242,7 +244,7 @@ __device__ inline float warp_reduce_max(float val) {
             elif error_lines and line.strip():
                 error_lines.append(f"  {line.strip()}")
         
-        return '\n'.join(error_lines) if error_lines else error_output
+        return "\n".join(error_lines) if error_lines else error_output
     
     def get_kernel_info(self, compiled_kernel: Dict[str, Any]) -> Dict[str, Any]:
         """Extract kernel information from compiled data."""
