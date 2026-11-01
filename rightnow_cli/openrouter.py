@@ -1,9 +1,10 @@
-import requests
 import json
 import time
-from typing import List, Dict, Any, Optional
 from dataclasses import dataclass
+from typing import Any, Dict, List, Optional
+
 import backoff
+import requests
 from rich.console import Console
 
 console = Console()
@@ -19,60 +20,56 @@ class KernelCandidate:
 
 class OpenRouterClient:
     BASE_URL = "https://openrouter.ai/api/v1/chat/completions"
-    
+
     def __init__(self, api_key: str):
         self.api_key = api_key
         self.headers = {
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json",
             "HTTP-Referer": "https://github.com/RightNow-AI/rightnow-cli",
-            "X-Title": "RightNow CLI"
+            "X-Title": "RightNow CLI",
         }
-    
+
     @backoff.on_exception(
         backoff.expo,
         (requests.exceptions.RequestException, requests.exceptions.HTTPError),
         max_tries=3,
-        max_time=60
+        max_time=60,
     )
     def _make_request(self, prompt: str, system_prompt: str, model: str = "openai/gpt-4") -> str:
         """Make a request to OpenRouter API with retry logic."""
-        payload = {
+        payload: Dict[str, Any] = {
             "model": model,
             "messages": [
                 {"role": "system", "content": system_prompt},
-                {"role": "user", "content": prompt}
+                {"role": "user", "content": prompt},
             ],
             "temperature": 0.2,
-            "max_tokens": 4000
+            "max_tokens": 4000,
         }
-        response = requests.post(
-            self.BASE_URL,
-            headers=self.headers,
-            json=payload,
-            timeout=60
-        )
-        
+        response = requests.post(self.BASE_URL, headers=self.headers, json=payload, timeout=60)
+
         if response.status_code == 401:
             raise ValueError("Invalid API key. Please check your OpenRouter API key.")
-        
+
         response.raise_for_status()
-        
+
         data = response.json()
-        return data["choices"][0]["message"]["content"]
-    
+        content = data["choices"][0]["message"]["content"]
+        return str(content)
+
     def generate_kernel_optimizations(
         self,
         original_code: str,
         analysis: Dict[str, Any],
         constraints: Dict[str, Any],
         num_variants: int = 3,
-        model_name: str = "openai/gpt-4"
+        model_name: str = "openai/gpt-4",
     ) -> List[KernelCandidate]:
         """Generate optimized variants of a user-provided CUDA kernel."""
-        
+
         system_prompt = self._create_kernel_optimization_prompt()
-        
+
         user_prompt = f"""Optimize this CUDA kernel for better performance:
 
 ```cuda
@@ -92,37 +89,46 @@ Constraints:
 
 Please generate {num_variants} optimized variants with different optimization strategies.
 Focus on: memory coalescing, shared memory usage, instruction-level parallelism, and minimizing divergence."""
-        
-        console.print(f"[cyan]Generating {num_variants} optimization variants with model {model_name}...[/cyan]")
-        
+
+        console.print(
+            f"[cyan]Generating {num_variants} optimization variants with model {model_name}...[/cyan]"
+        )
+
         candidates = []
         for i in range(num_variants):
             try:
-                response = self._make_request(f"{user_prompt}\n\nGenerate variant {i+1} with a different optimization approach.", system_prompt, model=model_name)
+                response = self._make_request(
+                    f"{user_prompt}\n\nGenerate variant {i+1} with a different optimization approach.",
+                    system_prompt,
+                    model=model_name,
+                )
                 kernel_code = self._extract_cuda_code(response)
-                
+
                 if kernel_code:
                     candidate = KernelCandidate(
                         code=kernel_code,
-                        operation=analysis.get('kernel_name', 'optimized_kernel'),
+                        operation=analysis.get("kernel_name", "optimized_kernel"),
                         constraints=constraints,
                         metadata={
                             "variant": i + 1,
                             "original_analysis": analysis,
-                            "generated_at": time.time()
-                        }
+                            "generated_at": time.time(),
+                        },
                     )
                     candidates.append(candidate)
-                    console.print(f"[green]Generated optimization variant {i + 1}/{num_variants}[/green]")
+                    console.print(
+                        f"[green]Generated optimization variant {i + 1}/{num_variants}[/green]"
+                    )
                 else:
-                    console.print(f"[yellow]Failed to extract valid CUDA code for variant {i + 1}[/yellow]")
-                    
+                    console.print(
+                        f"[yellow]Failed to extract valid CUDA code for variant {i + 1}[/yellow]"
+                    )
+
             except Exception as e:
                 console.print(f"[red]Error generating variant {i + 1}: {e}[/red]")
-        
+
         return candidates
-    
-    
+
     def _create_kernel_optimization_prompt(self) -> str:
         """Create the system prompt for general kernel optimization."""
         return """You are an expert CUDA performance engineer specializing in kernel optimization.
@@ -149,13 +155,10 @@ Always provide complete, compilable CUDA code with:
 - Proper error checking
 - Launch configuration recommendations
 - Expected performance improvements"""
-    
-    
-    
-    
+
     def _attention_prompt(self, model_info: Dict[str, Any]) -> str:
         """Create prompt for attention kernel."""
-        head_dim = model_info.get('hidden_size', 4096) // model_info.get('num_attention_heads', 32)
+        head_dim = model_info.get("hidden_size", 4096) // model_info.get("num_attention_heads", 32)
         return f"""Generate an optimized CUDA kernel for scaled dot-product attention.
 
 The kernel should compute attention scores for transformer models:
@@ -168,7 +171,7 @@ Consider:
 - Flash Attention-style algorithm if beneficial
 - Efficient softmax computation
 - Memory-efficient backward pass support"""
-    
+
     def _layernorm_prompt(self, model_info: Dict[str, Any]) -> str:
         """Create prompt for layer normalization kernel."""
         return f"""Generate an optimized CUDA kernel for layer normalization.
@@ -183,7 +186,7 @@ Consider:
 - Welford's algorithm for numerical stability
 - Vectorized operations
 - Efficient use of shared memory for reductions"""
-    
+
     def _gelu_prompt(self, model_info: Dict[str, Any]) -> str:
         """Create prompt for GELU activation kernel."""
         return """Generate an optimized CUDA kernel for GELU (Gaussian Error Linear Unit) activation.
@@ -195,7 +198,7 @@ Consider:
 - Fast approximations (tanh-based or polynomial)
 - Vectorized operations
 - Fused implementations if beneficial"""
-    
+
     def _softmax_prompt(self, model_info: Dict[str, Any]) -> str:
         """Create prompt for softmax kernel."""
         return """Generate an optimized CUDA kernel for softmax operation.
@@ -209,33 +212,33 @@ Consider:
 - Efficient reduction patterns
 - Warp-level primitives
 - Online softmax algorithm for memory efficiency"""
-    
+
     def _extract_cuda_code(self, response: str) -> Optional[str]:
         """Extract CUDA code from the API response."""
         import re
-        
-        cuda_pattern = r'```(?:cuda|cpp|c\+\+)?\n(.*?)```'
-        matches = re.findall(cuda_pattern, response, re.DOTALL)
-        
+
+        cuda_pattern = r"```(?:cuda|cpp|c\+\+)?\n(.*?)```"
+        matches: List[str] = re.findall(cuda_pattern, response, re.DOTALL)
+
         if matches:
-            return matches[0].strip()
-        
+            return str(matches[0]).strip()
+
         if "__global__" in response and "void" in response:
             lines = response.split("\n")
             code_lines = []
             in_code = False
-            
+
             for line in lines:
                 if "__global__" in line or "__device__" in line or "#include" in line:
                     in_code = True
                 if in_code:
                     code_lines.append(line)
-            
+
             if code_lines:
                 return "\n".join(code_lines).strip()
-        
+
         return None
-    
+
     def validate_api_key(self) -> bool:
         """Validate the API key by making a test request."""
         try:
